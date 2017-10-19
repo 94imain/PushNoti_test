@@ -1,16 +1,5 @@
 package com.example.woojinkim.pushnotitest;
 
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-
-import com.google.firebase.iid.FirebaseInstanceId;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,46 +7,60 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+
+import android.net.wifi.WifiInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import org.json.JSONObject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
-    Wlan1Info wlan1Info = new Wlan1Info();
+public class NextActivity extends AppCompatActivity {
 
-    String token = FirebaseInstanceId.getInstance().getToken();
+    Wlan1Info wlan2Info = new Wlan1Info();
 
-    @BindView(R.id.ae)EditText Etae;
-    @BindView(R.id.cnt) EditText Etcnt;
+    @BindView(R.id.response) TextView textResponse;
 
-    @BindView(R.id.save)Button buttonSave;
-    @OnClick(R.id.save) void save() {
-        wlan1Info.ssid = Etae.getText().toString();
-        wlan1Info.pwd = Etcnt.getText().toString();
-        String json = "{\"ae\":\""+wlan1Info.ssid+"\"" +
-                ",\"cnt\":\""+wlan1Info.pwd+"\"" +
-                ",\"fcm_token\":\""+token+"\"}";
+    @BindView(R.id.ssid)EditText Etssid;
+    @BindView(R.id.pwd) EditText Etpwd;
 
-        MySaveTask mySaveTask = new MySaveTask(
+    @BindView(R.id.address)EditText editTextAddress;
+    @BindView(R.id.port) EditText editTextPort;
+
+    @BindView(R.id.connect)Button buttonConnect;
+    @OnClick(R.id.connect) void connectyes() {
+        wlan2Info.ssid = Etssid.getText().toString();
+        wlan2Info.pwd = Etpwd.getText().toString();
+        String json2 = "{\"ssid\":\""+wlan2Info.ssid+"\"" +
+                ",\"pwd\":\""+wlan2Info.pwd+"\"}";
+
+        MyClientTask myClientTask = new MyClientTask(
                 "10.0.0.1",
-                8082,json);
-        mySaveTask.execute();
-    }
-    @OnClick(R.id.next) void next() {
-        Intent intent = new Intent(this, NextActivity.class);
-        startActivity(intent);
+                8081,json2);
+        myClientTask.execute();
     }
 
+    @BindView(R.id.clear) Button buttonClear;
+    @OnClick(R.id.clear) void SetTvClear() {
+        textResponse.setText("");
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_sub);
         ButterKnife.bind(this);
-        Log.d("token",FirebaseInstanceId.getInstance().getToken());
-        Log.d("length", ""+token.length());
     }
 
-    public class MySaveTask extends AsyncTask<Void, Void, Void> {
+    public class MyClientTask extends AsyncTask<Void, Void, Void> {
 
         String dstAddress;
         int dstPort;
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         String jsonString;
 
-        MySaveTask(String addr, int port,String json){
+        MyClientTask(String addr, int port,String json){
             dstAddress = addr;
             dstPort = port;
             jsonString=json;
@@ -116,6 +119,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            textResponse.setText(response);
+            super.onPostExecute(result);
         }
 
     }
